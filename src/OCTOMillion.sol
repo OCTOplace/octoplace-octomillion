@@ -321,7 +321,8 @@ contract OCTOMillion is ERC4907 {
         info.user = msg.sender;
         info.expires = expires;
 
-        rentalOffer.owner.call{value: rentalOffer.price}("");
+        (bool success, ) = rentalOffer.owner.call{value: rentalOffer.price}("");
+        require(success, "NFT owner payment failed");
 
         emit UpdateUser(tokenId, msg.sender, expires);
 
