@@ -11,8 +11,6 @@ import "./IOneMio721.sol";
    o_(")(")
 */
 
-/// @audit IMPORTANT! After ERC721 transfer remove the token from marketplace to prevent renting scams.
-
 /// @author Omsify
 /// @title OCTOMillion
 /// @notice ThetaMillion contract with OCTO extension to claim and rent.
@@ -150,6 +148,13 @@ contract OCTOMillion is ERC4907 {
 
     function getSpotsLength() public view returns (uint) {
         return spots.length;
+    }
+
+    /// @dev TokenId is already in rental contract or the offer is listed
+    function isInRentalOrOffer(uint256 tokenId) public view returns (bool) {
+        return
+            (userOf(tokenId) != address(0)) ||
+            (idToRentalOffer[tokenId].isActive == true);
     }
 
     /// @dev Buy spot
@@ -302,6 +307,10 @@ contract OCTOMillion is ERC4907 {
 
         require(rentalOffer.isActive == true, "Rental offer is not active");
         require(msg.value == rentalOffer.price, "Wrong price");
+        require(
+            msg.sender != rentalOffer.owner,
+            "Owner shouldn't be able to rent from himself"
+        );
         require(rentalOffer.tokenId == tokenId); // Remove token id in rental offer later.
 
         idToRentalOffer[tokenId].isActive = false;
@@ -311,6 +320,8 @@ contract OCTOMillion is ERC4907 {
         uint64 expires = uint64(block.timestamp) + rentalOffer.rentTime;
         info.user = msg.sender;
         info.expires = expires;
+
+        rentalOffer.owner.call{value: rentalOffer.price}("");
 
         emit UpdateUser(tokenId, msg.sender, expires);
 
@@ -334,6 +345,44 @@ contract OCTOMillion is ERC4907 {
             "Previous rental has not yet ended"
         );
         super.setUser(tokenId, user, expires);
+    }
+
+    /* = ERC721 function overrides to prevent offer marketplace scams */
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public virtual override {
+        require(
+            !isInRentalOrOffer(tokenId),
+            "The NFT is currently in rental or rental offer"
+        );
+        super.transferFrom(from, to, tokenId);
+    }
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public virtual override {
+        require(
+            !isInRentalOrOffer(tokenId),
+            "The NFT is currently in rental or rental offer"
+        );
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public virtual override {
+        require(
+            !isInRentalOrOffer(tokenId),
+            "The NFT is currently in rental or rental offer"
+        );
+        super.safeTransferFrom(from, to, tokenId, data);
     }
 
     /* === Private functions === */

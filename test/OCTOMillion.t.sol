@@ -19,6 +19,7 @@ contract OCTOMillionTest is Test {
     address admin = makeAddr("admin");
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
+    address aliceFriend = makeAddr("aliceFriend");
 
     // ThetaMillion admin
     address tmAdmin = makeAddr("tmAdmin");
@@ -205,18 +206,34 @@ contract OCTOMillionTest is Test {
                 octoMillion.createRentalOffer(0, rentPrice, rentTime);
 
                 vm.stopPrank();
+                // Alice should not be able to transfer the NFT while it's in rental offer
+                shouldNotBeAbleToTransferNFT(alice, aliceFriend, 0);
 
                 vm.deal(bob, rentPrice >= otherPrice ? rentPrice : otherPrice);
                 vm.startPrank(bob);
                 vm.expectRevert("Wrong price");
                 octoMillion.fullfillRentalOffer{value: otherPrice}(0);
 
+                uint256 aliceBalanceBefore = address(alice).balance;
+
                 vm.expectEmit(true, true, false, false, address(octoMillion));
                 emit UpdateUser(0, bob, uint64(block.timestamp) + rentTime);
                 octoMillion.fullfillRentalOffer{value: rentPrice}(0);
 
+                assertEq(
+                    address(alice).balance,
+                    aliceBalanceBefore + rentPrice
+                );
+                assertTrue(octoMillion.isInRentalOrOffer(0));
+
+                vm.stopPrank();
+
+                // Alice should not be able to transfer the NFT while it's in rental
+                shouldNotBeAbleToTransferNFT(alice, aliceFriend, 0);
+
                 // Test spot updating
                 // Bob should be able to update when it's the renting period
+                vm.startPrank(bob);
                 octoMillion.updateSpot(0, "NEW TITLE", "NEW IMAGE", "NEW LINK");
                 SpotWithOwner memory testSpot = SpotWithOwner(
                     Spot(
@@ -330,6 +347,21 @@ contract OCTOMillionTest is Test {
         assertEq(octoMillion.ownerOf(spotsAmount - 1), buyer);
         assertEq(spotsAmount, 1);
         assertTrue(spotWithOwnerEquals(octoMillion.getSpot(0), testSpot));
+    }
+
+    function shouldNotBeAbleToTransferNFT(
+        address nftOwner,
+        address to,
+        uint256 tokenId
+    ) internal {
+        vm.startPrank(nftOwner);
+        vm.expectRevert("The NFT is currently in rental or rental offer");
+        octoMillion.transferFrom(nftOwner, to, tokenId);
+        vm.expectRevert("The NFT is currently in rental or rental offer");
+        octoMillion.safeTransferFrom(nftOwner, to, tokenId);
+        vm.expectRevert("The NFT is currently in rental or rental offer");
+        octoMillion.safeTransferFrom(nftOwner, to, tokenId, "");
+        vm.stopPrank();
     }
 
     function spotWithOwnerEquals(
