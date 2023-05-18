@@ -11,11 +11,12 @@ import "./IOneMio721.sol";
    o_(")(")
 */
 
-/// @author Omsify
-/// @title OCTOMillion
-/// @notice ThetaMillion contract with OCTO extension to claim and rent.
-/// @dev First the users of ThetaMillion can claim the spots equal to their ones on this board.
-/// @dev After the contract owner starts the public sale, users can only buy new spots, claiming is closed.
+/** @author Omsify
+ * @title OCTOMillion
+ * @notice ThetaMillion contract with OCTO extension to claim and rent.
+ * @dev First the users of ThetaMillion can claim the spots equal to their ones on this board.
+ * @dev After the contract owner starts the public sale, users can only buy new spots, claiming is closed.
+ */
 contract OCTOMillion is ERC4907 {
     struct RentalOffer {
         uint256 tokenId;
@@ -79,9 +80,11 @@ contract OCTOMillion is ERC4907 {
         address newUser
     );
 
-    /// @dev Allow function call only IF:
-    /// @dev IF tokenId has ERC4907 user: msg.sender is the user
-    /// @dev ELSE: msg.sender is tokenId owner.
+    /**
+     * @dev Allow function call only IF:
+     * IF tokenId has ERC4907 user: msg.sender is the user
+     * ELSE: msg.sender is tokenId owner.
+     */
     modifier onlyUserOrOwner(uint256 tokenId) {
         if (userOf(tokenId) != address(0)) // There is current NFT user
         {
@@ -115,6 +118,9 @@ contract OCTOMillion is ERC4907 {
         thetaMillion = _thetaMillion;
     }
 
+    /**
+     * @dev ThetaMillion ERC721 tokenURI override.
+     */
     function tokenURI(
         uint tokenId
     ) public view override returns (string memory) {
@@ -138,6 +144,9 @@ contract OCTOMillion is ERC4907 {
             );
     }
 
+    /**
+     * @dev Get SpotWithOwner with tokenId `tokenId`.
+     */
     function getSpot(
         uint tokenId
     ) public view returns (SpotWithOwner memory spotInfo) {
@@ -146,19 +155,27 @@ contract OCTOMillion is ERC4907 {
         return spotInfo;
     }
 
+    /**
+     * @dev Spots total supply.
+     */
     function getSpotsLength() public view returns (uint) {
         return spots.length;
     }
 
-    /// @dev TokenId is already in rental contract or the offer is listed
+    /**
+     * @dev TokenId is already in rental contract or the offer is listed.
+     */
     function isInRentalOrOffer(uint256 tokenId) public view returns (bool) {
         return
             (userOf(tokenId) != address(0)) ||
             (idToRentalOffer[tokenId].isActive == true);
     }
 
-    /// @dev Buy spot
-    /// @notice It should be sale period and the spot shouldn't be bought yet.
+    /**
+     * @dev Buy spot.
+     *
+     * @notice It should be sale period and the spot shouldn't be bought yet.
+     */
     function buySpot(
         uint8 x,
         uint8 y,
@@ -190,8 +207,12 @@ contract OCTOMillion is ERC4907 {
         return createdTokenId;
     }
 
-    /// @dev ThetaMillion users are able to claim equal spot on
-    /// @dev Octoplace when it's not sale period yet
+    /**
+     * @dev Allows ThetaMillion users to claim equal spot on
+     * Octoplace when it's not sale period yet.
+     *
+     * @notice It shouldn't be sale period and the spot shouldn't be claimed yet.
+     */
     function claimSpot(
         uint256 tokenId
     ) external returns (uint256 createdTokenId) {
@@ -220,8 +241,11 @@ contract OCTOMillion is ERC4907 {
         return createdTokenId;
     }
 
-    /// @dev sets public sale status.
-    /// @param status — new public sale status.
+    /**
+     * @dev Sets public sale status.
+     *
+     * @param status — new public sale status.
+     */
     function setSaleStatus(bool status) external {
         require(msg.sender == contractOwner);
         isOnSale = status;
@@ -252,7 +276,9 @@ contract OCTOMillion is ERC4907 {
         );
     }
 
-    // withdraw allows the owner to transfer out the balance of the contract.
+    /**
+     * @dev Allows the owner to transfer out the balance of the contract.
+     */
     function withdraw() public {
         require(msg.sender == contractOwner);
         withdrawWallet.transfer(address(this).balance);
@@ -260,6 +286,9 @@ contract OCTOMillion is ERC4907 {
 
     /* = Rental functions = */
 
+    /**
+     * @dev Creates a rental offer in the built-in rental marketplace.
+     */
     function createRentalOffer(
         uint256 tokenId,
         uint256 price,
@@ -287,6 +316,9 @@ contract OCTOMillion is ERC4907 {
         emit RentalOfferCreated(tokenId, price, rentTime, msg.sender);
     }
 
+    /**
+     * @dev Cancels a rental offer in the built-in rental marketplace.
+     */
     function cancelRentalOffer(uint256 tokenId) external {
         require(
             userOf(tokenId) == address(0),
@@ -302,6 +334,9 @@ contract OCTOMillion is ERC4907 {
         emit RentalOfferCancelled(tokenId, msg.sender);
     }
 
+    /**
+     * @dev Fullfills a rental offer in the built-in rental marketplace.
+     */
     function fullfillRentalOffer(uint256 tokenId) external payable {
         RentalOffer memory rentalOffer = idToRentalOffer[tokenId];
 
@@ -334,8 +369,9 @@ contract OCTOMillion is ERC4907 {
         );
     }
 
-    /// @dev ERC4907 setUser() override for NFT owner not to able
-    /// @dev to revoke the rental or change the renter.
+    /** @dev ERC4907 setUser() override for NFT owner not to able
+     *  to revoke the rental or change the renter.
+     */
     function setUser(
         uint256 tokenId,
         address user,
@@ -388,8 +424,9 @@ contract OCTOMillion is ERC4907 {
 
     /* === Private functions === */
 
-    /// @dev Creates new spot and gives the NFT to msg.sender.
-    /// @dev Implementation copied from ThetaMillionContract.
+    /** @dev Creates new spot and gives the NFT to msg.sender.
+     * @notice Implementation copied from ThetaMillionContract.
+     */
     function _createNewSpot(
         uint8 x,
         uint8 y,
@@ -405,7 +442,7 @@ contract OCTOMillion is ERC4907 {
                     // the spot is taken
                     revert("The spot is already taken.");
                 }
-                /// @gas Poor gas...
+                // Poor gas...
                 grid[x + i][y + k] = true;
                 unchecked {
                     k++;
