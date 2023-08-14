@@ -42,7 +42,7 @@ contract OCTOMillion is ERC4907 {
     IOneMio721 private thetaMillion;
 
     // If false, only ThetaMillion NFT holders can claim their token.
-    bool private isOnSale = false;
+    bool private isOnSale;
 
     /// @dev Is equal spot (by tokenId) of ThetaMilion already claimed
     /// @dev from this contract?
