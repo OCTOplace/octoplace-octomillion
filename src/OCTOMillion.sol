@@ -274,14 +274,22 @@ contract OCTOMillion is ERC4907 {
 
     /**
      * @dev Sets public sale status.
+     * @dev Must be called by the contract owner.
      *
-     * @param status — new public sale status.
+     * @param status The new public isOnSale status.
      */
     function setSaleStatus(bool status) external {
         require(msg.sender == contractOwner);
         isOnSale = status;
     }
 
+    /**
+     * @dev Updates the spot `tokenId` data.
+     * @param tokenId The spot NFT token id to update data of.
+     * @param title The new spot title.
+     * @param image The new spot image.
+     * @param link The new spot link.
+     */
     function updateSpot(
         uint tokenId,
         string memory title,
@@ -309,6 +317,7 @@ contract OCTOMillion is ERC4907 {
 
     /**
      * @dev Allows the owner to transfer out the balance of the contract.
+     * @dev Must be called by the contract owner.
      */
     function withdraw() public {
         require(msg.sender == contractOwner);
@@ -319,6 +328,9 @@ contract OCTOMillion is ERC4907 {
 
     /**
      * @dev Creates a rental offer in the built-in rental marketplace.
+     * @param tokenId The offer spot NFT tokenId.
+     * @param price The rental offer price.
+     * @param rentTime The rental offer time (in seconds).
      */
     function createRentalOffer(
         uint256 tokenId,
@@ -349,6 +361,7 @@ contract OCTOMillion is ERC4907 {
 
     /**
      * @dev Cancels a rental offer in the built-in rental marketplace.
+     * @param tokenId The rental offer spot NFT tokenId.
      */
     function cancelRentalOffer(uint256 tokenId) external {
         require(
@@ -367,7 +380,10 @@ contract OCTOMillion is ERC4907 {
 
     /**
      * @dev Fullfills a rental offer in the built-in rental marketplace.
+     * @dev The caller must send enough TFUEL to pay for the rental offer.
+     * @param tokenId The rental offer spot NFT tokenId.
      */
+     
     function fullfillRentalOffer(uint256 tokenId) external payable {
         RentalOffer memory rentalOffer = idToRentalOffer[tokenId];
 
@@ -401,7 +417,7 @@ contract OCTOMillion is ERC4907 {
     }
 
     /** @dev ERC4907 setUser() override for NFT owner not to able
-     *  to revoke the rental or change the renter.
+     *  @dev to revoke the rental or change the renter.
      */
     function setUser(
         uint256 tokenId,
