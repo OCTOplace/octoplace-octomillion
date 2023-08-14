@@ -39,19 +39,25 @@ contract OCTOMillion is ERC4907 {
     /* = OCTOMillion storage variables = */
     /// @dev Update to valid link.
     string constant SPOT_BASE_URI = "https://nft.thetamillion.com/spot";
+    /// @dev Theta Milliion NFT address, users of which
+    /// @dev are able to claim equal spots on this contract. 
     IOneMio721 private thetaMillion;
 
-    // If false, only ThetaMillion NFT holders can claim their token.
+    /// @dev If false, only ThetaMillion NFT holders can claim their token.
     bool private isOnSale;
 
     /// @dev Is equal spot (by tokenId) of ThetaMilion already claimed
     /// @dev from this contract?
     mapping(uint256 => bool) isSpotClaimed;
 
-    // Rental marketplace
+    /* = Rental marketplace storage = */
     mapping(uint256 => RentalOffer) private idToRentalOffer;
 
-    // ThetaMillion
+    /* === Events === */
+    // ThetaMillion events
+    /**
+     * @dev Emitted on spot creation and update.
+     */
     event ThetaMillionPublish(
         uint indexed id,
         address indexed owner,
@@ -65,13 +71,25 @@ contract OCTOMillion is ERC4907 {
         bool update
     );
 
-    // OCTOMillion
+    // OCTOMillion events
+    /**
+     * @dev Emitted wneh owner of `tokenId` creates a rent-out offer.
+     * @param tokenId The spot NFT tokenId.
+     * @param price The rental offer price.
+     * @param rentTime The rental offer time (in seconds).
+     * @param nftOwner The spot owner who created the rental offer.
+     */
     event RentalOfferCreated(
         uint256 indexed tokenId,
         uint256 price,
         uint64 rentTime,
         address nftOwner
     );
+    /**
+     * @dev Emitted wneh owner of `tokenId` cancels a rent-out offer.
+     * @param tokenId The rental offer spot NFT tokenId.
+     * @param nftOwner The spot owner who cancelled the rental offer.
+     */
     event RentalOfferCancelled(uint256 indexed tokenId, address nftOwner);
     event RentalOfferFulfilled(
         uint256 indexed tokenId,
@@ -82,8 +100,8 @@ contract OCTOMillion is ERC4907 {
 
     /**
      * @dev Allow function call only IF:
-     * IF tokenId has ERC4907 user: msg.sender is the user
-     * ELSE: msg.sender is tokenId owner.
+     * @dev IF tokenId has ERC4907 user: msg.sender is the user
+     * @dev ELSE: msg.sender is tokenId owner.
      */
     modifier onlyUserOrOwner(uint256 tokenId) {
         if (userOf(tokenId) != address(0)) // There is current NFT user
