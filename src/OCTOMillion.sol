@@ -172,7 +172,7 @@ contract OCTOMillion is ERC4907 {
     }
 
     /**
-     * @dev Get SpotWithOwner with tokenId `tokenId`.
+     * @dev Get SpotWithOwner data with tokenId `tokenId`.
      */
     function getSpot(
         uint tokenId
