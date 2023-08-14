@@ -183,14 +183,15 @@ contract OCTOMillion is ERC4907 {
     }
 
     /**
-     * @dev Spots total supply.
+     * @dev Returns the NFT spots total supply.
      */
     function getSpotsLength() public view returns (uint) {
         return spots.length;
     }
 
     /**
-     * @dev TokenId is already in rental contract or the offer is listed.
+     * @dev Returns whether `tokenId` is already
+     * @dev in rental contract or the offer is listed.
      */
     function isInRentalOrOffer(uint256 tokenId) public view returns (bool) {
         return
@@ -199,9 +200,10 @@ contract OCTOMillion is ERC4907 {
     }
 
     /**
-     * @dev Buy spot.
+     * @dev Buy (mint) a spot.
      *
      * @notice It should be sale period and the spot shouldn't be bought yet.
+     * @notice The caller must send enough TFUEL to pay for the spot.
      */
     function buySpot(
         uint8 x,
@@ -236,7 +238,9 @@ contract OCTOMillion is ERC4907 {
 
     /**
      * @dev Allows ThetaMillion users to claim equal spot on
-     * Octoplace when it's not sale period yet.
+     * @dev Octoplace when it's not sale period yet.
+     *
+     * @param tokenId The id of ThetaMillion token to claim.
      *
      * @notice It shouldn't be sale period and the spot shouldn't be claimed yet.
      */
