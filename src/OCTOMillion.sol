@@ -85,12 +85,21 @@ contract OCTOMillion is ERC4907 {
         uint64 rentTime,
         address nftOwner
     );
+
     /**
      * @dev Emitted wneh owner of `tokenId` cancels a rent-out offer.
      * @param tokenId The rental offer spot NFT tokenId.
      * @param nftOwner The spot owner who cancelled the rental offer.
      */
     event RentalOfferCancelled(uint256 indexed tokenId, address nftOwner);
+
+    /**
+     * @dev Emitted wneh a user fulfills a rental offer.
+     * @param tokenId The rental offer spot NFT tokenId.
+     * @param price The price the `newUser` paid to rent the spot.
+     * @param nftOwner The spot owner who created the fulfilled rental offer.
+     * @param newUser The user who fulfilled the offer and rented the NFT spot.
+     */
     event RentalOfferFulfilled(
         uint256 indexed tokenId,
         uint256 price,
