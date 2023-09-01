@@ -163,6 +163,112 @@ contract OCTOMillionTest is Test {
         assertTrue(spotWithOwnerEquals(octoMillion.getSpot(0), tmSpotUnpacked));
     }
 
+    function testClaimMultiple() public {
+        string memory title = "I";
+        string memory image = "Love";
+        string memory link = "Testing";
+        uint8[2] memory x = [2,35];
+        uint8[2] memory y = [6,40];
+        uint8[2] memory widths = [2,4];
+        uint8[2] memory heights = [5,4];
+
+        uint256[2] memory costs = [
+            uint256(widths[0]) *
+            uint256(heights[0]) *
+            pixelsPerCell *
+            weiPixelPrice,
+            uint256(widths[1]) *
+            uint256(heights[1]) *
+            pixelsPerCell *
+            weiPixelPrice
+        ];
+        vm.deal(alice, costs[0]+costs[1]);
+
+        vm.prank(alice);
+        thetaMillion.buySpot{value: costs[0]}(
+            x[0],
+            y[0],
+            widths[0],
+            heights[0],
+            title,
+            image,
+            link
+        );
+        vm.prank(alice);
+        thetaMillion.buySpot{value: costs[1]}(
+            x[1],
+            y[1],
+            widths[1],
+            heights[1],
+            title,
+            image,
+            link
+        );
+
+        assertEq(thetaMillion.ownerOf(0), alice);
+        assertEq(thetaMillion.ownerOf(1), alice);
+        assertEq(thetaMillion.getSpotsLength(), 2);
+
+        // = Test OctoMillion claim =
+        vm.startPrank(bob);
+        vm.expectRevert("You're not the token owner");
+        octoMillion.claimSpot(0);
+        vm.expectRevert("You're not the token owner");
+        octoMillion.claimSpot(1);
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        uint256[] memory spotIds = new uint256[](2);
+        spotIds[0] = 0;
+        spotIds[1] = 1;
+        octoMillion.claimMultipleSpots(spotIds);
+        vm.stopPrank();
+
+        assertEq(octoMillion.ownerOf(0), alice);
+        assertEq(octoMillion.ownerOf(1), alice);
+        assertEq(octoMillion.getSpotsLength(), 2);
+
+        SpotWithOwner memory testSpot = SpotWithOwner(
+            Spot(x[0], y[0], widths[0], heights[0], title, image, link),
+            alice
+        );
+        OneMio721.SpotWithOwner memory tmSpotPacked = thetaMillion.getSpot(0);
+        SpotWithOwner memory tmSpotUnpacked = SpotWithOwner(
+            Spot(
+                tmSpotPacked.spot.x,
+                tmSpotPacked.spot.y,
+                tmSpotPacked.spot.width,
+                tmSpotPacked.spot.height,
+                tmSpotPacked.spot.title,
+                tmSpotPacked.spot.image,
+                tmSpotPacked.spot.link
+            ),
+            tmSpotPacked.owner
+        );
+        assertTrue(spotWithOwnerEquals(octoMillion.getSpot(0), testSpot));
+        assertTrue(spotWithOwnerEquals(octoMillion.getSpot(0), tmSpotUnpacked));
+
+        testSpot = SpotWithOwner(
+            Spot(x[1], y[1], widths[1], heights[1], title, image, link),
+            alice
+        );
+        tmSpotPacked = thetaMillion.getSpot(1);
+        tmSpotUnpacked = SpotWithOwner(
+            Spot(
+                tmSpotPacked.spot.x,
+                tmSpotPacked.spot.y,
+                tmSpotPacked.spot.width,
+                tmSpotPacked.spot.height,
+                tmSpotPacked.spot.title,
+                tmSpotPacked.spot.image,
+                tmSpotPacked.spot.link
+            ),
+            tmSpotPacked.owner
+        );
+        assertTrue(spotWithOwnerEquals(octoMillion.getSpot(1), testSpot));
+        assertTrue(spotWithOwnerEquals(octoMillion.getSpot(1), tmSpotUnpacked));
+    }
+
     function testRent(
         uint256 otherTokenId,
         uint256 rentPrice,

@@ -246,7 +246,7 @@ contract OCTOMillion is ERC4907 {
      */
     function claimSpot(
         uint256 tokenId
-    ) external returns (uint256 createdTokenId) {
+    ) public returns (uint256 createdTokenId) {
         require(!isOnSale, "Claim period already ended");
         require(!isSpotClaimed[tokenId], "This spot is already claimed");
         require(
@@ -270,6 +270,17 @@ contract OCTOMillion is ERC4907 {
         );
 
         return createdTokenId;
+    }
+
+    function claimMultipleSpots(uint[] calldata tokenIds) external {
+        uint256 length = tokenIds.length;
+        for(uint256 i = 0; i < length;)
+        {
+            claimSpot(tokenIds[i]);
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /**
